@@ -85,17 +85,20 @@ if [ ! -d "/opt/chefdk" ]; then
   curl -LO https://omnitruck.chef.io/install.sh && sudo bash ./install.sh -P chefdk -d $INSTALL_DIR/chef_installer && rm install.sh
 fi
 
+export PATH=/opt/chefdk/embedded/bin/:$PATH
+
 # write out Berksfile of install cookbooks
 cat << EOF > $INSTALL_DIR/chef_installer/Berksfile
 source 'https://supermarket.chef.io'
 
 cookbook 'chef-services', git: 'https://github.com/itmustbejj/chef-services.git', branch: 'deltron-changes'
-cookbook 'chef-ingredient', git: 'https://github.com/itmustbejj/chef-ingredient', branch: 'debug-branch'
+#cookbook 'chef-ingredient', git: 'https://github.com/itmustbejj/chef-ingredient', branch: 'debug-branch'
+cookbook 'chef-ingredient', git: 'https://github.com/chef-cookbooks/chef-ingredient'
 cookbook 'collect_metrics', git: 'https://github.com/yzl/collect_metrics.git'
 cookbook 'elasticsearch', git: 'https://github.com/itmustbejj/cookbook-elasticsearch', branch: '2.x.x'
 cookbook 'java'
 cookbook 'sysctl'
-cookbook 'backend_search_cluster', git: 'https://github.com/itmustbejj/backend_search_cluster'
+cookbook 'backend_search_cluster', git: 'https://github.com/itmustbejj/backend_search_cluster', branch: 'logstash_rewrite'
 cookbook 'audit'
 cookbook 'chef-client'
 EOF

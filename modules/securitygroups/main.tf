@@ -1,5 +1,12 @@
+variable "tag_dept" {}
+variable "tag_contact" {}
+variable "automate_tag" {}
+variable "automate_instance_id" {}
+variable "automate_vpc" {}
+variable "iam_profile_id" {}
+
 resource "aws_security_group" "chef_server" {
-  name        = "chef_server_${random_id.automate_instance_id.hex}"
+  name        = "chef_server_${var.automate_instance_id}"
   description = "Terraform Automate Chef Server"
   vpc_id      = "${var.automate_vpc}"
 
@@ -71,7 +78,7 @@ resource "aws_security_group_rule" "egress_chef_server_allow_0-65535_all" {
 }
 
 resource "aws_security_group" "chef_automate" {
-  name        = "chef_automate_${random_id.automate_instance_id.hex}"
+  name        = "chef_automate_${var.automate_instance_id}"
   description = "Terraform Chef Automate Server"
   vpc_id      = "${var.automate_vpc}"
 
@@ -183,7 +190,7 @@ resource "aws_security_group_rule" "egress_chef_automate_allow_0-65535_all" {
 }
 
 resource "aws_security_group" "build_nodes" {
-  name        = "build_nodes_${random_id.automate_instance_id.hex}"
+  name        = "build_nodes_${var.automate_instance_id}"
   description = "Terraform Build Nodes"
   vpc_id      = "${var.automate_vpc}"
 

@@ -7,7 +7,7 @@
 #
 # The client defined by client_name needs to be an admin user of the Chef Server org.
 client_name = "delivery-validator"
-client_key = "/home/centos/delivery-validator.pem"
+client_key = "/home/ec2-user/delivery-validator.pem"
 
 # The data_collector_url must be set if you want to make API requests to an Automate server.
 # For example: data_collector_url = "https://automate.example.org/data-collector/v0/"

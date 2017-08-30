@@ -1,8 +1,21 @@
+variable "tag_dept" {}
+variable "tag_contact" {}
+variable "tag_test_id" {}
+variable "automate_subnet"  {}
+variable "automate_tag" {}
+variable "automate_instance_id" {}
+variable "aws_key_pair_name" {}
+variable "ami_id" {}
+variable "security_group_id" {}
+variable "iam_profile_id" {}
+variable "aws_ami_user" {}
+variable "aws_key_pair_file" {}
+
 # Chef Server
 resource "null_resource" "generate_chef_keypair" {
   # instead of setup.sh
   provisioner "local-exec" {
-    command = "test -f .chef/delivery-validator-${random_id.automate_instance_id.hex}.pem || ssh-keygen -t rsa -N '' -f .chef/delivery-validator-${random_id.automate_instance_id.hex}.pem ; openssl rsa -in .chef/delivery-validator-${random_id.automate_instance_id.hex}.pem -pubout -out .chef/delivery-validator-${random_id.automate_instance_id.hex}.pub"
+    command = "mkdir -p ${path.module}/.chef; test -f ${path.module}/.chef/delivery-validator-${var.automate_instance_id}.pem || ssh-keygen -t rsa -N '' -f ${path.module}/.chef/delivery-validator-${var.automate_instance_id}.pem ; openssl rsa -in ${path.module}/.chef/delivery-validator-${var.automate_instance_id}.pem -pubout -out ${path.module}/.chef/delivery-validator-${var.automate_instance_id}.pub"
   }
 }
 
@@ -12,12 +25,12 @@ resource "aws_instance" "chef_server" {
     private_key = "${file("${var.aws_key_pair_file}")}"
   }
 
-  ami                         = "${data.aws_ami.centos.id}"
-  iam_instance_profile        = "${aws_iam_instance_profile.cloudwatch_metrics_instance_profile.id}"
+  ami                         = "${var.ami_id}"
+  iam_instance_profile        = "${var.iam_profile_id}"
   instance_type               = "${var.chef_server_instance_type}"
   key_name                    = "${var.aws_key_pair_name}"
   subnet_id                   = "${var.automate_subnet}"
-  vpc_security_group_ids      = ["${aws_security_group.chef_server.id}"]
+  vpc_security_group_ids      = ["${var.security_group_id}"]
   associate_public_ip_address = true
   ebs_optimized               = true
 
@@ -28,7 +41,7 @@ resource "aws_instance" "chef_server" {
   }
 
   tags {
-    Name      = "${format("${var.automate_tag}_${random_id.automate_instance_id.hex}_chef_server_%02d", count.index + 1)}"
+    Name      = "${format("${var.automate_tag}_${var.automate_instance_id}_chef_server_%02d", count.index + 1)}"
     X-Dept    = "${var.tag_dept}"
     X-Contact = "${var.tag_contact}"
     TestId    = "${var.tag_test_id}"
@@ -41,12 +54,12 @@ resource "aws_instance" "chef_server" {
   }
 
   provisioner "file" {
-    source      = ".chef/delivery-validator-${random_id.automate_instance_id.hex}.pub"
+    source      = "${path.module}/.chef/delivery-validator-${var.automate_instance_id}.pub"
     destination = "/tmp/pre-delivery-validator.pub"
   }
 
   provisioner "file" {
-    source      = "files/installer.sh"
+    source      = "${path.module}/files/installer.sh"
     destination = "/tmp/installer.sh"
   }
 
@@ -61,7 +74,7 @@ resource "aws_instance" "chef_server" {
 
 # template to delay reading of validator key
 data "template_file" "delivery_validator" {
-  template = "${file(".chef/delivery-validator-${random_id.automate_instance_id.hex}.pem")}"
+  template = "${file("${path.module}/.chef/delivery-validator-${var.automate_instance_id}.pem")}"
 
   vars {
     hacky_thing_to_delay_evaluation = "${aws_instance.chef_server.private_ip}"
@@ -76,10 +89,10 @@ data "template_file" "delivery_validator" {
 #   log_level                :info
 #   log_location             STDOUT
 #   node_name                "delivery-validator"
-#   client_key               ".chef/delivery-validator-${random_id.automate_instance_id.hex}.pem"
+#   client_key               "${path.module}/.chef/delivery-validator-${var.automate_instance_id}.pem"
 #   chef_server_url          "https://api.opscode.com/organizations/irvingpop"
 #   cache_type               'BasicFile'
-#   cache_options( :path => "#{ENV['HOME']}/.chef/checksums" )
+#   cache_options( :path => "#{ENV['HOME']}/${path.module}/.chef/checksums" )
 #   EOF
 #
 #   vars {
@@ -87,6 +100,11 @@ data "template_file" "delivery_validator" {
 #   }
 # }
 
+# TODO: duplicate output
 output "chef_server" {
   value = "${aws_instance.chef_server.public_dns}"
+}
+
+output "delivery_pem" {
+  value = "${data.template_file.delivery_validator.rendered}"
 }

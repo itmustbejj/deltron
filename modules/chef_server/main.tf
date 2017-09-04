@@ -15,7 +15,7 @@ variable "aws_key_pair_file" {}
 resource "null_resource" "generate_chef_keypair" {
   # instead of setup.sh
   provisioner "local-exec" {
-    command = "mkdir -p ${path.module}/.chef; test -f ${path.module}/.chef/delivery-validator-${var.automate_instance_id}.pem || ssh-keygen -t rsa -N '' -f ${path.module}/.chef/delivery-validator-${var.automate_instance_id}.pem ; openssl rsa -in ${path.module}/.chef/delivery-validator-${var.automate_instance_id}.pem -pubout -out ${path.module}/.chef/delivery-validator-${var.automate_instance_id}.pub"
+    command = "mkdir -p ${path.module}/.chef; test -f ${path.module}/.chef/delivery-validator-${var.automate_instance_id}.pem || ssh-keygen -t rsa -N '' -f ${path.module}/.chef/delivery-validator-${var.automate_instance_id}.pem ; openssl rsa -in ${path.module}/.chef/delivery-validator-${var.automate_instance_id}.pem -pubout -out ${path.module}/.chef/delivery-validator-${var.automate_instance_id}.pub",
   }
 }
 
@@ -45,12 +45,6 @@ resource "aws_instance" "chef_server" {
     X-Dept    = "${var.tag_dept}"
     X-Contact = "${var.tag_contact}"
     TestId    = "${var.tag_test_id}"
-  }
-
-  # Set hostname in separate connection.
-  # Transient hostname doesn't set correctly in time otherwise.
-  provisioner "remote-exec" {
-    inline = ["sudo hostnamectl set-hostname ${aws_instance.chef_server.public_dns}"]
   }
 
   provisioner "file" {

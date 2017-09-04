@@ -11,7 +11,9 @@ variable "security_group_id" {}
 variable "iam_profile_id" {}
 variable "delivery_pem" {}
 variable "chef_server_fqdn" {}
-variable "es_peers" {}
+variable "es_peers" {
+  type = "list"
+}
 variable "aws_ami_user" {}
 variable "aws_key_pair_file" {}
 
@@ -43,18 +45,15 @@ resource "aws_instance" "chef_automate" {
     TestId    = "${var.tag_test_id}"
   }
 
-  # Set hostname in separate connection.
-  # Transient hostname doesn't set correctly in time otherwise.
   provisioner "remote-exec" {
     inline = [
-      "sudo hostnamectl set-hostname ${aws_instance.chef_automate.public_dns}",
       "sudo mkdir /etc/chef/",
     ]
   }
 
   provisioner "file" {
     source      = "chef_automate.license"
-    destination = "~/chef_automate.license"
+    destination = "/tmp/chef_automate.license"
   }
 
   provisioner "chef" {

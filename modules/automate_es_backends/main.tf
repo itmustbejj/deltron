@@ -45,11 +45,11 @@ resource "aws_instance" "es_backend" {
     TestId    = "${var.tag_test_id}"
   }
 
-  provisioner "remote-exec" {
-    inline = [
-      "sudo hostnamectl set-hostname ${self.public_dns}",
-    ]
-  }
+  #provisioner "remote-exec" {
+  #  inline = [
+  #    "sudo hostnamectl set-hostname ${self.public_dns}",
+  #  ]
+  #}
 
   provisioner "chef" {
     attributes_json = <<-EOF
